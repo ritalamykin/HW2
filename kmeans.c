@@ -198,6 +198,7 @@ static PyObject* fit(PyObject *self, PyObject *args) {
             return NULL;
         }
         curr = PyFloat_AsDouble(next);
+
         switch (i) {
             case 0:
                 D = (int)curr;
@@ -234,13 +235,14 @@ static PyObject* fit(PyObject *self, PyObject *args) {
         if (centroids[i].sum==NULL){
             exit(1);
         }
-        centroids[i].prev_coords = (float*) calloc(D, sizeof(float ));
+        centroids[i].prev_coords = (float*) calloc(D, sizeof(float));
         if (centroids[i].prev_coords==NULL){
             exit(1);
         }
         centroids[i].centroid_id = i;
         centroids[i].cnt = 0;
     }
+
     /* Creating points out of the given coordinates */
     points = (Point*)calloc(N, sizeof(Point));
     for(i = 0; i < N; i++) { /* fetch points */
@@ -254,6 +256,7 @@ static PyObject* fit(PyObject *self, PyObject *args) {
                 return NULL;
             }
             curr = PyFloat_AsDouble(next);
+
             c_coords[j] = (float)curr;
         }
         points[i].coordinates = c_coords;
@@ -266,12 +269,14 @@ static PyObject* fit(PyObject *self, PyObject *args) {
             res[i * D + j] = res_centroids[i].coordinates[j];
         }
     }
+
     py_res = PyList_New(D * K);
     for (i = 0; i < D * K; ++i)
     {
         python_float = Py_BuildValue("f", res[i]);
         PyList_SetItem(py_res, i, python_float);
     }
+
     free_points(points);
     free_centroids(centroids);
     free(res);

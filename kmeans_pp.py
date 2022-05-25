@@ -2,8 +2,8 @@ import sys
 import mykmeanssp as km
 import numpy as np
 import pandas as pd
+global k, max_iter, eps, file_name_1, file_name_2, d, N
 
-global k, max_iter, eps, file_name_1, file_name_2
 
 def cmd_input():
     global k, max_iter, eps, file_name_1, file_name_2
@@ -37,30 +37,22 @@ def valid_input():
         exit(1)
 
 
-class Point:
-    def __init__(self, coords, index, d=0, p=0):
-        self.coords = coords
-        self.index = index
-        self.d = d
-        self.p = p
-
-    def distance(self, point2):
-        return sum([(p - q) ** 2 for p, q in zip(self.coords, point2)])
-
-
 # if we need to check k is in range check here
 def preprocessing_files():
     """
     reading file_name_1, file_name_2 (txt/csv files), combine both with inner join by index column
     :return: np array (combined)
     """
+    global d, N
     arr1 = np.genfromtxt(file_name_1, delimiter=',', dtype=np.float64)
     arr2 = np.genfromtxt(file_name_2, delimiter=',', dtype=np.float64)
     df1 = pd.DataFrame(arr1[:, 1:], index=arr1[:, 0], dtype=np.float64)
     df2 = pd.DataFrame(arr2[:, 1:], index=arr2[:, 0], dtype=np.float64)
     data = df1.join(df2, how="inner", rsuffix='r')
-    data = data.apply(lambda x: Point(list(x), x.name), axis=1).reset_index(drop=True)
-    return data.to_numpy(dtype=Point)
+    data.sort_index(inplace=True)
+    d = len(data.columns)
+    N = len(data)
+    return data.to_numpy(dtype=np.float64)
 
 
 def kmeans(points):
@@ -69,69 +61,51 @@ def kmeans(points):
     :param points:
     :return:
     """
+    centroids = np.zeros(k, dtype=np.int64)
+    d_val = np.zeros(N, dtype=np.float64)
+    p_val = np.zeros(N, dtype=np.float64)
     np.random.seed(0)
-    centroids = np.empty(k, dtype=Point)
-    centroids[0] = np.random.choice(points, 1, replace=False)[0]
-    # centroids[0] = data_arr[np.random.choice(len(data_arr), 1, replace=False)]
+    centroids[0] = np.random.choice(N)
     i = 1
     while i < k:
-        sum_d = 0
-        for point in points:
-            point.d = min([point.distance(centroids[j].coords) for j in range(i)])
-            sum_d += point.d
-        for point in points:
-            point.p = point.d/sum_d
-        centroids[i] = np.random.choice(points, 1, p=np.vectorize(lambda x: x.p)(points))[0]
+        for m in range(N):
+            # d_val[m] = min([np.power(np.linalg.norm(points[m, :]-points[centroids[j], :] for j in range(i)), 2)])
+            min_dist = min([points[m, :]-points[idx, :] for idx in centroids[:i]], key=lambda x: np.power(np.linalg.norm(x), 2))
+            d_val[m] = np.power(np.linalg.norm(min_dist), 2)
+        for m in range(N):
+            p_val[m] = d_val[m]/np.sum(d_val)
+        centroids[i] = np.random.choice(N, p=p_val)
         i += 1
     return centroids
 
+
 def create_kmeans_arguments(centroids, points):
-    res = [float(len(points[0].coords))]  # Coordinates' dimension
-    res += [float(len(centroids))]
-    res += [float(len(points))]
-    res += [float(max_iter)]
-    res += [float(coord) for cent in centroids for coord in cent.coords]
-    res += [float(coord) for point in points for coord in point.coords]
+    res = [float(d), float(k), float(N), float(max_iter)]
+    res.extend(centroids.flatten().tolist())
+    res.extend(points.flatten().tolist())
     return res
 
+
 def create_final_string(centroids, indices):
-    final_string = ""
-    for j in range(len(indices)):
-        index = indices[j]
-        size = len(indices)
-        final_string += str(index)
-        if j < size:
-            final_string += ","
-        j = j + 1
-    final_string = final_string[:-1]
-    final_string += "\n"
-    for c in centroids:
-        i = 1
-        c = [("%.4f" % num) for num in c]
-        size = len(c)
-        for item in c:
-            final_string += str(item)
-            if i < size:
-                final_string += ","
-            else:
-                final_string += "\n"
-            i = i + 1
-    return final_string
+    final_str = [np.array2string(indices, separator=',')[1:-1]]
+    for i in range(k):
+        c = centroids[i]
+        c_str = np.array2string(c, formatter={'float_kind': lambda x: "%.4f" % x}, separator=',')[1:-1]
+        final_str.append(c_str)
+    return '\n'.join(final_str)
+
 
 def main():
     cmd_input()
-    # global k, max_iter, eps, file_name_1, file_name_2
-    # k =3
-    # max_iter = 300
-    # eps = 0.01
-    # file_name_1 = 'test_data/input_1_db_1 copy.csv'
-    # file_name_2 = 'test_data/input_1_db_2.txt'
+    global k, max_iter, eps, file_name_1, file_name_2
     points = preprocessing_files()
-    centroids = kmeans(points)
-    indices = [int(point.index) for point in centroids]
-    centroids_from_c = km.fit(create_kmeans_arguments(centroids, points))
-    D = len(points[0].coords)
-    centroids = [centroids_from_c[i:i+D] for i in range(0, len(centroids_from_c), D)]
+    if k < 1 or k > len(points):
+        print('Invalid Input!')
+        exit(1)
+    indices = kmeans(points)
+    centroids_from_c = km.fit(create_kmeans_arguments(points[indices], points))
+    centroids = np.array(centroids_from_c).reshape(k,d)
+    # centroids = [centroids_from_c[i:i+d] for i in range(0, len(centroids_from_c), d)]
     final_string = create_final_string(centroids, indices)
     print(final_string)
 
