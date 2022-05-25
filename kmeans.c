@@ -239,6 +239,7 @@ static PyObject* fit(PyObject *self, PyObject *args) {
         if (centroids[i].prev_coords==NULL){
             exit(1);
         }
+
         centroids[i].centroid_id = i;
         centroids[i].cnt = 0;
     }
