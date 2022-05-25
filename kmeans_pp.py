@@ -107,6 +107,7 @@ def main():
     centroids = np.array(centroids_from_c).reshape(k,d)
     # centroids = [centroids_from_c[i:i+d] for i in range(0, len(centroids_from_c), d)]
     final_string = create_final_string(centroids, indices)
+
     print(final_string)
 
 
