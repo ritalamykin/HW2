@@ -130,7 +130,24 @@ int update_centroids(Centroid centroids[]){
     }
     return epsilon_check;
 }
+void free_points(Point points[]){
+    int i;
+    for (i = 0; i < N; ++i) {
+        free(points[i].coordinates);
+    }
+    free(points);
+}
 
+
+void free_centroids(Centroid centroids[]){
+    int i;
+    for (i = 0; i < K; ++i) {
+        free(centroids[i].coordinates);
+        free(centroids[i].sum);
+        free(centroids[i].prev_coords);
+    }
+    free(centroids);
+}
 
 Centroid* kmeans(Point points[], Centroid centroids[]){
     int epsilon_check = 0;
@@ -197,26 +214,6 @@ static PyObject* fit(PyObject *self, PyObject *args) {
         }
     }
 
-
-    void free_points(Point points[]){
-        int i;
-        for (i = 0; i < N; ++i) {
-            free(points[i].coordinates);
-        }
-        free(points);
-    }
-
-
-    void free_centroids(Centroid centroids[]){
-        int i;
-        for (i = 0; i < K; ++i) {
-            free(centroids[i].coordinates);
-            free(centroids[i].sum);
-            free(centroids[i].prev_coords);
-        }
-        free(centroids);
-    }
-
     /* Creating centroids out of the given coordinates */
     centroids = (Centroid*)calloc(K, sizeof(Centroid));
     for (i = 0; i < K; i++){ /* fetch the centroids */
@@ -278,9 +275,10 @@ static PyObject* fit(PyObject *self, PyObject *args) {
     free_points(points);
     free_centroids(centroids);
     free(res);
-    free_centroids(res_centroids);
+    //free_centroids(res_centroids);
     return py_res;
 }
+
 
 /*This array tells Python what methods this module has. We will use it in the next structure*/
 
