@@ -262,7 +262,6 @@ static PyObject* fit(PyObject *self, PyObject *args) {
         }
         points[i].coordinates = c_coords;
     }
-    res_centroids = (Centroid *)calloc(K, sizeof(Centroid));
     res_centroids = kmeans(points, centroids);
     res = (float*) calloc(K * D, sizeof(float));
     for(i = 0; i < K; i++){
@@ -281,7 +280,6 @@ static PyObject* fit(PyObject *self, PyObject *args) {
     free_points(points);
     free_centroids(centroids);
     free(res);
-    //free_centroids(res_centroids);
     return py_res;
 }
 
