@@ -92,7 +92,7 @@ def create_final_string(centroids, indices):
         c = centroids[i]
         c_str = np.array2string(c, formatter={'float_kind': lambda x: "%.4f" % x}, separator=',')[1:-1]
         final_str.append(c_str)
-    return '\n'.join(final_str)
+    return '\n'.join(final_str).replace(" ", "")
 
 
 def main():
