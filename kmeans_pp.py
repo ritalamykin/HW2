@@ -52,6 +52,9 @@ def preprocessing_files():
     data.sort_index(inplace=True)
     d = len(data.columns)
     N = len(data)
+    if k < 1 or k > N:
+        print('Invalid Input!')
+        exit(1)
     return data.to_numpy(dtype=np.float64)
 
 
@@ -69,7 +72,6 @@ def kmeans(points):
     i = 1
     while i < k:
         for m in range(N):
-            # d_val[m] = min([np.power(np.linalg.norm(points[m, :]-points[centroids[j], :] for j in range(i)), 2)])
             min_dist = min([points[m, :]-points[idx, :] for idx in centroids[:i]], key=lambda x: np.power(np.linalg.norm(x), 2))
             d_val[m] = np.power(np.linalg.norm(min_dist), 2)
         for m in range(N):
@@ -80,37 +82,29 @@ def kmeans(points):
 
 
 def create_kmeans_arguments(centroids, points):
-    res = [float(d), float(k), float(N)]
-    res.extend(points[centroids].flatten().tolist())
+    res = [float(d), float(k), float(N), float(max_iter)]
+    res.extend(centroids.flatten().tolist())
     res.extend(points.flatten().tolist())
     return res
 
 
-def create_final_string(centroids, indices, points):
-    final_str = [np.array2string(indices)[1:-1]]
+def create_final_string(centroids, indices):
+    final_str = [np.array2string(indices, separator=',')[1:-1]]
     for i in range(k):
-        c = points[indices[i]]
-        c_str = np.array2string(c, formatter={'float_kind': lambda x: "%.4f" % x}, separator=',')
+        c = centroids[i]
+        c_str = np.array2string(c, formatter={'float_kind': lambda x: "%.4f" % x}, separator=',')[1:-1]
         final_str.append(c_str)
-    return '\n'.join(final_str)
+    return '\n'.join(final_str).replace(" ", "")
 
 
 def main():
     cmd_input()
-    # global k, max_iter, eps, file_name_1, file_name_2
-    # k =3
-    # max_iter = 100
-    # eps = 0.01
-    # file_name_1 = 'test_data/input_1_db_1.txt'
-    # file_name_2 = 'test_data/input_1_db_2.txt'
     points = preprocessing_files()
-    if k < 1 or k > len(points):
-        print('Invalid Input!')
-        exit(1)
     indices = kmeans(points)
-    centroids_from_c = km.fit(create_kmeans_arguments(indices, points))
+    centroids_from_c = km.fit(create_kmeans_arguments(points[indices], points))
     centroids = np.array(centroids_from_c).reshape(k, d)
-    final_string = create_final_string(centroids, indices, points)
+    final_string = create_final_string(centroids, indices)
+
     print(final_string)
 
 
