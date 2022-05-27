@@ -8,7 +8,7 @@
 #include <string.h>
 
 /* INTERNAL START */
-#define EPSILON 0.001
+int EPSILON;
 int K; /* num of centroids */
 int D; /* num of coordinates */
 int N; /* num of points */
@@ -165,9 +165,10 @@ Centroid* kmeans(Point points[], Centroid centroids[]){
 /* Expected params:
  *  1. Num of coordinates
  *  2. Num of centroids
- *  3. Num of points
- *  4. Max iteration
- *  5. All the coordinates one by one, centroids first, then points. Corresponding to the values above.
+ *  3. Epsilon
+ *  4. Num of points
+ *  5. Max iteration
+ *  6. All the coordinates one by one, centroids first, then points. Corresponding to the values above.
  * */
 static PyObject* fit(PyObject *self, PyObject *args) {
     PyObject *obj;
@@ -189,7 +190,7 @@ static PyObject* fit(PyObject *self, PyObject *args) {
     if (!iter) {
         return NULL;
     }
-    for (i = 0; i < 4; i++) { /* Fetching the parameters: num of centroids and num of coordinates */
+    for (i = 0; i < 5; i++) { /* Fetching the parameters: num of centroids and num of coordinates */
         next = PyIter_Next(iter);
         if (!next) {  /* nothing left in the iterator, we expect at least the parameters */
             return NULL;
@@ -207,14 +208,15 @@ static PyObject* fit(PyObject *self, PyObject *args) {
                 K = (int)curr;
                 break;
             case 2:
+                EPSILON = (int) curr;
+            case 3:
                 N = (int)curr;
                 break;
-            case 3:
+            case 4:
                 ITER_MAX = (int)curr;
                 break;
         }
     }
-
     /* Creating centroids out of the given coordinates */
     centroids = (Centroid*)calloc(K, sizeof(Centroid));
     for (i = 0; i < K; i++){ /* fetch the centroids */
