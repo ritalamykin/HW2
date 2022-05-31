@@ -82,7 +82,7 @@ def kmeans(points):
 
 
 def create_kmeans_arguments(centroids, points):
-    res = [float(d), float(k), float(N), float(max_iter)]
+    res = [float(d), float(k), float(eps), float(N), float(max_iter)]
     res.extend(centroids.flatten().tolist())
     res.extend(points.flatten().tolist())
     return res
