@@ -89,10 +89,10 @@ def create_kmeans_arguments(centroids, points):
 
 
 def create_final_string(centroids, indices):
-    final_str = [np.array2string(indices, separator=',')[1:-1]]
+    final_str = [np.array2string(indices, separator=',')[1:-1].replace("\n", "")]
     for i in range(k):
         c = centroids[i]
-        c_str = np.array2string(c, formatter={'float_kind': lambda x: "%.4f" % x}, separator=',')[1:-1]
+        c_str = np.array2string(c, formatter={'float_kind': lambda x: "%.4f" % x}, separator=',')[1:-1].replace("\n", "")
         final_str.append(c_str)
     return '\n'.join(final_str).replace(" ", "")
 
